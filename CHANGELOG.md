@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.8.0 (2026-10-29)
+Three new shock cards (piece 3), each tied to a public source. A scope ruling application names your product (imported inputs only): Commerce has 30 days to open the inquiry and 120 days to rule, extendable to 300, and an in-scope ruling brings deposits back to the day it opened (19 CFR 351.225). The state air permit stalls (during the build): based on a South Carolina solar plant whose air permit had no decision date months after comments closed. Your tool vendor goes bust: based on Meyer Burger's US units filing Chapter 11 in June 2025. New entries in the SRC map and three new rows in the ASSUMPTIONS table, with links. The Ledger line format is unchanged. Because the shock deck is bigger, a seed shared before this version may now deal a different set of shocks. Tested by replaying three seeds by click, one run by keyboard, the reduced-motion and no-WebGL fallbacks, and each new card's text, options and timing directly.
+
 ## v0.7.1 (2026-10-26)
 Ready to go public. The report box now only posts to the request form; the old fallback that opened your mail app with a personal address in it is gone, and if the post fails the page asks you to press the button again. No gameplay change, no new numbers.
 

@@ -325,6 +325,10 @@ const SRC = {
   gerarden: { t: "Gerarden, Bollinger, Gillingham and Xu (2025), Strategic Avoidance and the Welfare Impacts of US Solar Panel Tariffs, NBER WP 34401: tariffed firms moved production to uncovered countries; US prices rose over 20%", u: "https://www.nber.org/papers/w34401" },
   treasury45x: { t: "US Treasury and IRS (2024), Advanced Manufacturing Production Credit final rule, 89 FR 85798: eligible components, credit amounts and the 2030 to 2032 phase-down", u: "https://www.govinfo.gov/content/pkg/FR-2024-10-28/pdf/2024-24840.pdf" },
   cbp: { t: "US Customs and Border Protection, AD/CVD FAQ: duties paid at entry are cash deposits of estimated duties; the final amount is set in a later administrative review", u: "https://www.cbp.gov/trade/priority-issues/adcvd/antidumping-and-countervailing-duties-adcvd-frequently-asked-questions" },
+  scope_reg: { t: "19 CFR 351.225, Commerce scope rulings: 30 days to accept an application and initiate, final ruling within 120 days of initiation, extendable to no more than 300; if in scope, cash deposits apply to entries from the date of initiation (and normally earlier)", u: "https://www.ecfr.gov/current/title-19/chapter-III/part-351/subpart-B/section-351.225" },
+  scope_apps: { t: "Commerce, Notice of Scope Ruling Applications Filed in AD and CVD proceedings (June 2026 filings), FR Doc. 2026-16039 (6 Aug 2026)", u: "https://www.federalregister.gov/documents/2026/08/06/2026-16039/notice-of-scope-ruling-applications-filed-in-antidumping-and-countervailing-duty-proceedings" },
+  permit_sc: { t: "Post and Courier (Feb 2024): South Carolina's state air construction permit review for a Fort Mill solar panel plant had no decision date (DHEC statement of 21 Feb) more than three months after public comments closed on 3 Nov", u: "https://www.postandcourier.com/york-county/news/silfab-fort-mill-solar-panel-green-energy-dhec/article_9a34a48e-d191-11ee-bb6e-6f788006e3ef.html" },
+  vendor_ch11: { t: "Mercom (27 Jun 2025): Meyer Burger's US subsidiaries filed for Chapter 11 in the Bankruptcy Court for the District of Delaware, citing liquidity, shortly after its German subsidiaries filed for insolvency", u: "https://mercomindia.com/meyer-burger-files-bankruptcy-for-us-subsidiaries-and-debtor-affiliates" },
   assumption: { t: "Game assumption (no single source): chosen to make the game playable; treat as illustrative", u: "https://github.com/builtbyaarya/solar-factory-game#assumptions" }
 };
 
@@ -400,6 +404,9 @@ const ASSUMPTIONS = [
   ["Power prices", "Rounded EIA industrial averages: GA 7, TX 6, OH 8, AZ 7, SC 7, MI 9 cents/kWh. Energy is a small share of cost except for ingot and wafer", ["eia"]],
   ["Build time and ramp", "Module 3 quarters, cell 5, wafer 6, battery 6 (plus any grid wait). Ramp-up starts at 55% yield and climbs each quarter, more slowly for bigger plants; a bad quarter can stall it. The shape (low initial yield, time to volume, yield as the main early lever) follows Terwiesch and Bohn (2001) and Bohn and Terwiesch (1999); the numbers are the game's", ["terwiesch", "bohn", "assumption"]],
   ["Labour and incentives", "State multipliers 0.92 to 1.12 on conversion cost; state incentive 5% to 15% of capex. Illustrative", ["assumption"]],
+  ["Scope rulings", "Commerce has 30 days to open a scope inquiry and 120 days to rule, extendable to 300; an in-scope ruling brings cash deposits back to the date the inquiry opened. In the game a ruling against you costs a back-deposit bill and 20% on material cost; the odds and the sizes are the game's", ["scope_reg", "scope_apps", "assumption"]],
+  ["State permit delay", "A state air construction permit can sit in review with no decision date for months after comments close (South Carolina, 2024). The game's options (one or two quarters lost, or about 0.6 cents per W of capacity for extra abatement) are illustrative", ["permit_sc", "assumption"]],
+  ["Tool vendor bankruptcy", "Equipment and module makers do fail: Meyer Burger's US units filed Chapter 11 in June 2025 after its German subsidiaries filed for insolvency. The cost of spares, service and the yield dip in the game are illustrative", ["vendor_ch11", "assumption"]],
   ["Financing", "Capex is funded at the start: 60% equity, 40% construction loan at 9% a year, plus working capital for the build period and six months beyond. One further loan (25% of capex, 9%) is offered when cash runs low. Bankruptcy when cash is below zero after that, or deeply negative at any time", ["assumption"]]
 ];
 
@@ -614,6 +621,35 @@ ev({ id: "dc_premium", title: "A data-center developer wants US-made supply at a
   src: ["assumption"], when: (G) => G.phase === "operate" && G.sup.domestic, weight: 7, once: true,
   options: [ { label: "Take the deal", hint: "Price up 8% for two years", apply: (G) => { G.price *= 1.08; G.premiumUntil = G.q + 8; G.cred += 6; return "Signed at an 8% premium."; } },
              { label: "Pass", hint: "No change", apply: () => "You passed." } ] });
+
+ev({ id: "scope_ruling", title: "A scope ruling application names your product",
+  text: (G) => `A rival asks Commerce to rule that ${G.stage.id === "module" ? "modules built from your imported cells" : "your imported input"} falls inside an existing duty order. Commerce has 30 days to decide whether to open the inquiry and 120 days to rule, extendable to 300. If the answer is yes, cash deposits reach back to the day the inquiry opened.`,
+  src: ["scope_reg", "scope_apps", "assumption"], when: (G) => G.q >= 2 && !G.sup.domestic, weight: 5, once: true,
+  options: [
+    { label: "Hire trade counsel and fight it", hint: "Legal fees now, decent odds", apply: (G) => { G.cash -= 3e6 * Math.sqrt(G.size.mult); if (chance(0.65)) { G.cred += 3; return "Commerce ruled your product out of scope. Fees paid, nothing else."; } G.cash -= 0.004 * G.unitsPerYear; G.matMult *= 1.2; return "Commerce ruled it in scope. Back deposits paid to the day the inquiry opened; material cost up 20%."; } },
+    { label: "Re-source to US-made input before the ruling", hint: "Dearer, ends the question", apply: (G) => { G.cash -= 0.012 * G.unitsPerYear; G.matMult = 1.30; G.sup = SUPPLIERS[2]; return "Re-sourced to US-made input. The ruling no longer touches you."; } },
+    { label: "Keep buying and set cash aside", hint: "A reserve against a deposit bill", apply: (G) => { G.cash -= 0.004 * G.unitsPerYear; if (chance(0.35)) { G.matMult *= 1.2; return "In scope. Your reserve covered the back deposits; material cost up 20% from here."; } G.cash += 0.004 * G.unitsPerYear; return "Out of scope. The reserve came back to you."; } }
+  ] });
+
+ev({ id: "permit_delay", title: "The state air permit stalls",
+  text: (G) => `${G.state.name}'s environment department is still reviewing your air construction permit, and neighbours have filled the comment docket. It has happened before: in South Carolina a solar plant's state air permit had no decision date more than three months after comments closed.`,
+  src: ["permit_sc", "assumption"], when: (G) => G.phase === "build" && G.q <= 4, weight: 6, once: true,
+  options: [
+    { label: "Answer every comment and hold an open house", hint: "Small cost, one quarter lost, credibility up", apply: (G) => { G.cash -= 1e6 * G.size.mult; G.buildLeft += 1; G.cred += 5; return "You answered every comment in public. One quarter lost; the town knows your name now."; } },
+    { label: "Add exhaust treatment to the design", hint: "Capex up, permit on time", apply: (G) => { G.cash -= 0.006 * G.unitsPerYear; return "Abatement added to the design. The permit came through on schedule."; } },
+    { label: "Wait it out", hint: "Free, maybe two quarters", apply: (G) => { if (chance(0.5)) { G.buildLeft += 2; return "Two quarters lost waiting for the permit."; } return "The permit came through after a tense month. No time lost."; } }
+  ] });
+
+ev({ id: "vendor_bust", title: "Your tool vendor goes bust",
+  text: () => "The US arm of the company that supplied your main production tools has filed for Chapter 11. Spare parts, service contracts and software licences are now in a bankruptcy court. It is not far-fetched: in June 2025 Meyer Burger's US units filed Chapter 11 in Delaware, close behind insolvency filings by its German subsidiaries.",
+  src: ["vendor_ch11", "assumption"], when: (G) => G.q >= 2, weight: 4, once: true,
+  options: (G) => [
+    { label: "Buy two years of spares from the estate", hint: "Cash now, no disruption", apply: (G) => { G.cash -= 0.005 * G.unitsPerYear; return "Two years of spares on your shelves. The lines did not notice."; } },
+    { label: "Hire the vendor's laid-off field engineers", hint: "Conversion cost up 4%, credibility up", apply: (G) => { G.convMult *= 1.04; G.cred += 4; return "The people who built your tools now work for you. Payroll up 4%."; } },
+    G.phase === "build"
+      ? { label: "Wait for a buyer to take over the vendor", hint: "Install slips a quarter", apply: (G) => { G.buildLeft += 1; return "A buyer took over the service business. One quarter lost."; } }
+      : { label: "Move service to a third party", hint: "Yield dips 6 points", apply: (G) => { G.yield = Math.max(0.5, G.yield - 0.06); return "A third-party crew took over the service. Yield dipped 6 points while they learned the tools."; } }
+  ] });
 
 ev({ id: "quiet", title: "A quiet quarter",
   text: () => "Nothing broke. The line ran. The accountant smiled for the first time this year.",

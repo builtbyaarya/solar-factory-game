@@ -13,11 +13,12 @@ One small piece per build, tested before it lands. Keep the game one file, keep 
 - v0.6.0 (23 Oct 2026): the plant scene rebuilt, email box for report requests, full feasibility study format.
 - v0.7.0 (26 Oct 2026): cash by quarter chart on the result card (piece 2).
 - v0.7.1 (26 Oct 2026): report box posts to the form only (no personal address in the page); made public.
+- v0.8.0 (29 Oct 2026): three new shock cards: a scope ruling, a state permit delay, a tool vendor going bust (piece 3).
 
 ## Next pieces (in order)
 1. [x] Keyboard play: number keys pick options, Enter advances; visible focus on the active card.
 2. [x] A tiny end-of-run chart on the result card: cash by quarter, drawn on the canvas.
-3. Three more shock cards from new public events (each with a source): a scope ruling, a state permitting delay, a tool vendor going bust.
+3. [x] Three more shock cards from new public events (each with a source): a scope ruling, a state permitting delay, a tool vendor going bust.
 4. Difficulty presets (Investor, Founder, Plant manager) that change starting cash and event weights.
 5. Battery-specific cards: cathode material sourcing under the prohibited-foreign-entity rules; the storage demand upswing.
 6. A "What the numbers were" screen after the result: the full ledger by quarter, downloadable as CSV.
